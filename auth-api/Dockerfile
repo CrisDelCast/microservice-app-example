@@ -14,5 +14,5 @@ COPY --from=builder /app/auth-api .
 
 RUN chmod +x auth-api
 
-EXPOSE 8083
+EXPOSE 8000
 CMD ["./auth-api"]
