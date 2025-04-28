@@ -77,7 +77,7 @@ jobs:
       # 8. Deploy Zipkin
       - name: Deploy Zipkin
         run: |
-          kubectl apply -f ./zipkin.yml --namespace microservices
+          kubectl apply -f ./zipkin.yaml --namespace microservices
 
       # 9. Build & Push Docker Images
       - name: Build and push Docker images
