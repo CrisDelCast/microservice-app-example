@@ -1,4 +1,4 @@
-SZname: Deploy to Azure Kubernetes Service
+name: Deploy to Azure Kubernetes Service
 
 on:
   push:
