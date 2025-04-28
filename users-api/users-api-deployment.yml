@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: users-api
-  namespace: microservices # Correcto
+  namespace: microservices
 spec:
   replicas: 2
   selector:
@@ -15,27 +15,26 @@ spec:
     spec:
       containers:
         - name: users-api
-          image: acrformymicroservices-test.azurecr.io/users-api:github.sha
+          image: acrformymicroservices-test.azurecr.io/users-api:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8083
           env:
             - name: JWT_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: users-api-secrets
-                  key: JWT_SECRET
+              value: "PRFT"
             - name: SERVER_PORT
               value: "8083"
           livenessProbe:
-            tcpSocket:
+            httpGet:
+              path: /users/health
               port: 8083
             initialDelaySeconds: 15
             periodSeconds: 10
             timeoutSeconds: 2
             failureThreshold: 3
           readinessProbe:
-            tcpSocket:
+            httpGet:
+              path: /users/health
               port: 8083
             initialDelaySeconds: 5
             periodSeconds: 10

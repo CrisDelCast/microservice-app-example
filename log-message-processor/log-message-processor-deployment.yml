@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: log-message-processor
-          image: acrformymicroservices-test.azurecr.io/log-message-processor:github.sha
+          image: acrformymicroservices-test.azurecr.io/log-message-processor:latest
           imagePullPolicy: Always
           env:
             - name: REDIS_HOST
@@ -29,8 +29,6 @@ spec:
                 secretKeyRef:
                   name: redis-secret
                   key: REDIS_PASSWORD
-          ports:
-            - containerPort: 5000
           resources:
             limits:
               memory: "128Mi"

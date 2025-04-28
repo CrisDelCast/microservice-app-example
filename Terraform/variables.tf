@@ -1,7 +1,7 @@
 variable "subscription_id" {
   description = "Azure Subscription ID"
   type        = string
-  default     = "0e253c24-1ee3-4d78-a9e9-271989d8815b"
+  default     = "7a35b3c3-24c7-4fee-bc1d-a82fbf5ef6a1"
 }
 
 variable "resource_group_name" {
@@ -19,7 +19,7 @@ variable "location" {
 variable "acr_name" {
   description = "Name of the Azure Container Registry (ACR)"
   type        = string
-  default     = "acrformymicroservices20250424"
+  default     = "uniqueacr2023"
 }
 
 variable "aks_name" {
@@ -43,13 +43,13 @@ variable "aks_node_vm_size" {
 variable "apim_name" {
   description = "Name of the Azure API Management service"
   type        = string
-  default     = "microservices-apim20250424"
+  default     = "unique-apim-2023"
 }
 
 variable "redis_name" {
   description = "Name of the Azure Redis Cache instance"
   type        = string
-  default     = "microservices-redis20250424"
+  default     = "unique-redis-cache-2023"
 }
 
 variable "apim_publisher_name" {
