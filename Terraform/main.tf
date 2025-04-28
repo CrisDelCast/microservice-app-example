@@ -78,7 +78,7 @@ resource "azurerm_api_management" "apim" {
 }
 
 # Namespace en Kubernetes
-resource "kubernetes_namespace" "microservices_ns" {
+resource "kubernetes_namespace" "microservices" {
   metadata {
     name = var.k8s_namespace
   }
