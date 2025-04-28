@@ -52,9 +52,9 @@ jobs:
         id: redis-key # Usaremos este ID para referenciar las salidas de este paso
         run: |
           # Obtiene la clave primaria de Redis de Azure
-          # Asegúrate que los nombres 'microservices-redis20250424' y 'microservices-rg' sean correctos
+          # Asegúrate que los nombres 'unique-redis-cache-2023' y 'microservices-rg' sean correctos
           REDIS_KEY=$(az redis list-keys \
-            --name microservices-redis20250424 \
+            --name unique-redis-cache-2023 \
             --resource-group microservices-rg \
             --query "primaryKey" -o tsv)
 
