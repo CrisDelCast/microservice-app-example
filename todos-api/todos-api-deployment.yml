@@ -35,6 +35,10 @@ spec:
                 secretKeyRef:
                   name: redis-secret
                   key: REDIS_PASSWORD
+            - name: ZIPKIN_URL
+              value: "http://zipkin.microservices.svc.cluster.local:9411/api/v2/spans"
+            - name: SPRING_ZIPKIN_ENABLED
+              value: "true"  # Solo si usas Spring Boot
           livenessProbe:
             httpGet:
               path: /health

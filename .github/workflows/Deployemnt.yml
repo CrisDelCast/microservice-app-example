@@ -15,77 +15,100 @@ jobs:
       IMAGE_TAG: ${{ github.sha }}
 
     steps:
+      # 1. Checkout
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Azure Login
-        uses: azure/login@v2
+      # 2. Login Azure
+      - name: Login to Azure
+        uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Get AKS Credentials
+      # 3. Get AKS credentials
+      - name: Get AKS credentials
         run: |
-          az aks get-credentials \
-            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-            --name ${{ secrets.AKS_CLUSTER_NAME }} \
-            --overwrite-existing
+          az aks get-credentials --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+                                 --name ${{ secrets.AKS_CLUSTER_NAME }} \
+                                 --overwrite-existing
 
-      - name: Ensure Namespace
-        run: |
-          kubectl get namespace microservices || \
-          kubectl create namespace microservices
-
-      - name: ACR Login
+      # 4. ACR login
+      - name: Azure Container Registry Login
         run: az acr login --name ${{ secrets.AZURE_CONTAINER_REGISTRY }}
 
-      - name: Create Redis Secret
-        id: redis-secret
+      # 5. Ensure namespace exists
+      - name: Ensure Kubernetes Namespace exists
+        run: |
+          echo "
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: microservices
+          " | kubectl apply -f -
+
+      # 6. Create Redis Secret
+      - name: Get Redis Primary Key and Create Secret
+        id: redis-key
         run: |
           REDIS_KEY=$(az redis list-keys \
             --name unique-redis-cache-2023 \
             --resource-group microservices-rg \
             --query "primaryKey" -o tsv)
+
           echo "::add-mask::$REDIS_KEY"
           echo "REDIS_PASSWORD=$REDIS_KEY" >> $GITHUB_ENV
 
           kubectl create secret generic redis-secret \
             --namespace microservices \
-            --from-literal=REDIS_PASSWORD="$REDIS_KEY" \
+            --from-literal=REDIS_PASSWORD="$REDIS_PASSWORD" \
             --dry-run=client -o yaml | kubectl apply -f -
 
+      # 7. Create Auth API Secret
       - name: Create Auth API Secret
         run: |
+          AUTH_JWT_SECRET_VALUE="${{ secrets.AUTH_JWT_SECRET }}"
+          echo "::add-mask::$AUTH_JWT_SECRET_VALUE"
+
           kubectl create secret generic auth-api-secrets \
             --namespace microservices \
-            --from-literal=JWT_SECRET="${{ secrets.AUTH_JWT_SECRET }}" \
+            --from-literal=JWT_SECRET="$AUTH_JWT_SECRET_VALUE" \
             --dry-run=client -o yaml | kubectl apply -f -
 
-      - name: Build and Push Docker Images
+      # 8. Deploy Zipkin
+      - name: Deploy Zipkin
+        run: |
+          kubectl apply -f ./infra/zipkin.yml --namespace microservices
+
+      # 9. Build & Push Docker Images
+      - name: Build and push Docker images
         run: |
           for dir in ./auth-api ./frontend ./users-api ./todos-api ./log-message-processor; do
-            service=$(basename $dir)
-            docker build -t ${{ secrets.AZURE_CONTAINER_REGISTRY }}/$service:${{ env.IMAGE_TAG }} $dir
-            docker push ${{ secrets.AZURE_CONTAINER_REGISTRY }}/$service:${{ env.IMAGE_TAG }}
+            name=$(basename $dir)
+            docker build -t ${{ secrets.AZURE_CONTAINER_REGISTRY }}/$name:${{ env.IMAGE_TAG }} $dir
+            docker push ${{ secrets.AZURE_CONTAINER_REGISTRY }}/$name:${{ env.IMAGE_TAG }}
           done
 
-      - name: Update Manifests with New Image Tags
+      # 10. Replace image tag in manifests
+      - name: Replace image tag in manifests
         run: |
           for dir in ./auth-api ./frontend ./users-api ./todos-api ./log-message-processor; do
-            service=$(basename $dir)
-            sed -i "s|image: .*|image: ${{ secrets.AZURE_CONTAINER_REGISTRY }}/$service:${{ env.IMAGE_TAG }}|" $dir/${service}-deployment.yml
+            sed -i "s|image: .*:.*|image: ${{ secrets.AZURE_CONTAINER_REGISTRY }}/$(basename $dir):${{ env.IMAGE_TAG }}|" $dir/${dir##*/}-deployment.yml
           done
 
-      - name: Deploy Updated Manifests
+      # 11. Apply Kubernetes manifests
+      - name: Apply Kubernetes manifests
         run: |
           for dir in ./auth-api ./frontend ./users-api ./todos-api ./log-message-processor; do
             kubectl apply -f $dir/${dir##*/}-deployment.yml --namespace microservices
           done
 
-      - name: Restart Deployments
+      # 12. Rollout restart deployments
+      - name: Rollout restart deployments
         run: |
           for app in auth-api frontend users-api todos-api log-message-processor; do
             kubectl rollout restart deployment $app --namespace microservices
           done
 
-      - name: List Pods
+      # 13. List pods
+      - name: List all pods in microservices namespace
         run: kubectl get pods -n microservices

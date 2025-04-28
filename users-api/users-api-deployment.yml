@@ -24,6 +24,10 @@ spec:
               value: "PRFT"
             - name: SERVER_PORT
               value: "8083"
+            - name: ZIPKIN_URL
+              value: "http://zipkin.microservices.svc.cluster.local:9411/api/v2/spans"
+            - name: SPRING_ZIPKIN_ENABLED
+              value: "true" # Solo si tu microservicio usa Spring Boot. Si no, ignóralo.
           livenessProbe:
             httpGet:
               path: /users/health

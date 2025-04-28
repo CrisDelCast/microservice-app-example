@@ -24,6 +24,10 @@ spec:
               value: "http://users-api:8083"
             - name: JWT_SECRET
               value: "PRFT"
+            - name: ZIPKIN_URL
+              value: "http://zipkin.microservices.svc.cluster.local:9411/api/v2/spans"  # Dirección de Zipkin
+            - name: SPRING_ZIPKIN_ENABLED
+              value: "true"  # Solo si usas Spring Boot
           ports:
             - containerPort: 8000
           livenessProbe:

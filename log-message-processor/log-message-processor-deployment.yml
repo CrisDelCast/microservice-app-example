@@ -29,6 +29,10 @@ spec:
                 secretKeyRef:
                   name: redis-secret
                   key: REDIS_PASSWORD
+            - name: ZIPKIN_URL
+              value: "http://zipkin.microservices.svc.cluster.local:9411/api/v2/spans" # URL de Zipkin
+            - name: SPRING_ZIPKIN_ENABLED
+              value: "true" # Solo si usas Spring Boot
           resources:
             limits:
               memory: "128Mi"
