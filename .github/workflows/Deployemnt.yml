@@ -68,7 +68,7 @@ jobs:
           # --dry-run=client -o yaml genera el YAML sin aplicarlo directamente
           # | kubectl apply -f - toma el YAML generado y lo aplica via stdin
           kubectl create secret generic redis-secret \
-            --namespace microservices \
+            --namespace microservices_ns \
             --from-literal=REDIS_PASSWORD="$REDIS_PASSWORD" \
             --dry-run=client -o yaml | kubectl apply -f -
 
@@ -87,7 +87,7 @@ jobs:
           # --dry-run=client -o yaml genera el YAML sin aplicarlo directamente
           # | kubectl apply -f - toma el YAML generado y lo aplica via stdin
           kubectl create secret generic auth-api-secrets \
-            --namespace microservices \
+            --namespace microservices_ns \
             --from-literal=JWT_SECRET="$AUTH_JWT_SECRET_VALUE" \
             --dry-run=client -o yaml \
           | kubectl apply -f -
@@ -121,7 +121,7 @@ jobs:
           # Recorre los directorios de los servicios
           for dir in ./auth-api ./frontend ./users-api ./todos-api ./log-message-processor; do
             # Aplica el archivo de deployment modificado al namespace correcto en AKS
-            kubectl apply -f $dir/${dir##*/}-deployment.yml --namespace microservices
+            kubectl apply -f $dir/${dir##*/}-deployment.yml --namespace microservices_ns
           done
 
       # 9. Rollout restart (optional refuerzo)
@@ -131,7 +131,7 @@ jobs:
           # Recorre los nombres de las aplicaciones (deben coincidir con los nombres de los deployments en los YAMLs)
           for app in auth-api frontend users-api todos-api log-message-processor; do
             # Reinicia el deployment específico en el namespace
-            kubectl rollout restart deployment $app --namespace microservices
+            kubectl rollout restart deployment $app --namespace microservices_ns
           done
 
       # NOTA: Puedes añadir un paso final para mostrar la IP externa del frontend si es un LoadBalancer
